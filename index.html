@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>时空脉络 - 历代舆图产量统计</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --ancient-yellow: #f2e6c9;
+            --vermilion: #962218;
+            --gold: #b3935d;
+            --ink: #1a1a1a;
+        }
+        body { 
+            background: var(--ancient-yellow); 
+            margin: 0; 
+            font-family: "STKaiti", "STSong", serif; 
+            overflow: hidden; 
+        }
+        .nav-back { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            z-index: 100; 
+        }
+        .nav-back a { 
+            color: var(--vermilion); 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 18px;
+        }
+        
+        .header-section {
+            text-align: center;
+            padding-top: 25px; 
+            position: relative;
+            z-index: 10;
+        }
+        h2 { 
+            color: var(--vermilion); 
+            border-bottom: 2px solid var(--vermilion); 
+            display: inline-block; 
+            padding-bottom: 5px; 
+            margin: 0;
+            font-size: 26px;
+            letter-spacing: 2px;
+            margin: 02px 0 0 35%; 
+        }
+
+        #main { 
+            width: 60%; 
+            height: 64vh; 
+            margin: 92px 0 0 37%; 
+            border: 2px solid var(--gold); 
+            padding: 10px; 
+            background: rgba(255,255,255,0.2); 
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-back"><a href="visualization.html">← 返回展厅</a></div>
+    
+    <div class="header-section">
+        <h2>历代舆图产出分布：时间维度统计</h2>
+    </div>
+
+    <div id="main"></div>
+
+    <script>
+        var chart = echarts.init(document.getElementById('main'));
+
+        // 基于全数据CSV分析的50年区间统计
+        var timeBins = ['239-288', '289-338', '339-388', '389-438', '439-488', '489-538', '539-588', '589-638', '639-688', '689-738', '739-788', '789-838', '839-888', '889-938', '939-988', '989-1038', '1039-1088', '1089-1138', '1139-1188', '1189-1238', '1239-1288', '1289-1338', '1339-1388', '1389-1438', '1439-1488', '1489-1538', '1539-1588', '1589-1638', '1639-1688', '1689-1738', '1739-1788', '1789-1838', '1839-1888', '1889-1938'];
+        var mapCounts = [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10, 2, 11, 11, 4, 5, 5, 4, 27, 54, 50, 60, 43, 83, 78, 135, 34];
+        var dynastiesInBins = ['秦', '晋', '魏晋', '南北朝', '南北朝', '南北朝', '隋', '唐', '唐', '唐', '唐', '唐', '唐', '五代', '北宋', '北宋', '北宋', '北宋/南宋', '南宋', '南宋', '元', '元', '明', '明', '明', '明', '明', '明', '清', '清', '清', '清', '清', '清末/民国'];
+
+        // 朝代总量占比数据
+        var donutData = [
+            { value: 429, name: '清代', itemStyle: { color: '#962218' } },
+            { value: 146, name: '明代', itemStyle: { color: '#b3935d' } },
+            { value: 25, name: '南宋', itemStyle: { color: '#d1c1a5' } },
+            { value: 11, name: '元代', itemStyle: { color: '#a65d56' } },
+            { value: 9, name: '北宋', itemStyle: { color: '#5c1611' } },
+            { value: 7, name: '其他/宋元以前', itemStyle: { color: '#b9ab94' } }
+        ];
+
+        var option = {
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            legend: { 
+                orient: 'vertical',
+                left: '12%',
+                top: '15%',
+                data: donutData.map(d => d.name),
+                textStyle: { fontFamily: 'STKaiti' }
+            },
+            grid: {
+                top: '10%',
+                left: '8%',
+                right: '8%',
+                bottom: '12%',
+                containLabel: true
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    data: timeBins,
+                    name: '年份跨度',
+                    axisLine: { lineStyle: { color: '#b3935d' } },
+                    axisLabel: { interval: 1, rotate: 45, fontFamily: 'STKaiti' }
+                },
+                {
+                    type: 'category',
+                    data: dynastiesInBins,
+                    name: '朝代',
+                    position: 'top',
+                    axisLine: { lineStyle: { color: '#962218' } },
+                    axisLabel: { interval: 1, fontFamily: 'STKaiti', color: '#962218' }
+                }
+            ],
+            yAxis: {
+                type: 'value',
+                name: '地图幅数',
+                splitLine: { lineStyle: { type: 'dashed', color: '#d1c1a5' } }
+            },
+            // 滚动条，方便查看长跨度数据
+            dataZoom: [
+                { type: 'inside', start: 50, end: 100 },
+                { type: 'slider', start: 50, end: 100, bottom: '2%', borderColor: '#b3935d', handleColor: '#962218' }
+            ],
+            series: [
+                {
+                    name: '朝代分布总量',
+                    type: 'pie',
+                    // 将复合环形图压入双X轴柱图绘图区内部，与柱图叠层显示
+                    center: ['32%', '38%'],
+                    radius: ['17%', '32%'],
+                    z: 6,
+                    data: donutData,
+                    itemStyle: {
+                        borderRadius: 5,
+                        borderColor: '#f2e6c9',
+                        borderWidth: 4
+                    },
+                    label: { show: true, formatter: '{b}\n{c}幅', position: 'outside', fontSize: 10 }
+                },
+                {
+                    name: '地图数量',
+                    type: 'bar',
+                    barWidth: '60%',
+                    z: 2,
+                    data: mapCounts,
+                    itemStyle: {
+                        color: 'rgba(150,34,24,0.85)'
+                    }
+                }
+            ]
+        };
+
+        chart.setOption(option);
+        window.onresize = function() { chart.resize(); };
+    </script>
+</body>
+</html>
